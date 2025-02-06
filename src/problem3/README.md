@@ -1,8 +1,10 @@
 # 🤢 Problem 3: Messy React
 
+## Issues
+
 1. Type Safety Issues:
 
-Using any type for blockchain parameter in getPriority
+Using `any` type for blockchain parameter in getPriority
 Inconsistent balance types between WalletBalance and FormattedWalletBalance in sorting/filtering
 Missing type definition for 'blockchain' in WalletBalance interface
 
@@ -33,3 +35,36 @@ getPriority function could be a constant lookup object
 Blockchain types should be a union type
 Missing error boundaries and loading states
 Missing proper prop validation
+
+## Improve
+
+1. Removed Magic Number:
+
+Replaced -99 with meaningful enum values
+Added PriorityValues enum for clear intent
+Separate UNSUPPORTED and DEFAULT values for different cases
+
+2. Added Utility Functions:
+
+getBlockchainPriority for consistent priority lookup
+formatBalance for consistent balance formatting
+Better encapsulation of logic
+
+3. Improved Error Handling:
+
+Added empty state handling
+More explicit unsupported blockchain handling
+Clearer distinction between unsupported and default cases
+
+4. Code Clarity:
+
+More descriptive variable names
+Clear separation between types, constants, and logic
+Better documentation of intent
+
+5. Additional Improvements:
+
+Maintained all previous type safety improvements
+Kept the performance optimizations
+Retained the proper React patterns
+Single file for easier maintenance when needed

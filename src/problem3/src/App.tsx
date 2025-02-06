@@ -1,35 +1,106 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useMemo } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Types
+type Blockchain = "Osmosis" | "Ethereum" | "Arbitrum" | "Zilliqa" | "Neo";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+interface WalletBalance {
+  blockchain: Blockchain;
+  currency: string;
+  amount: number;
 }
 
-export default App
+interface FormattedWalletBalance extends WalletBalance {
+  formatted: string;
+  usdValue: number;
+}
+
+interface WalletRowProps {
+  className?: string;
+  amount: number;
+  usdValue: number;
+  formattedAmount: string;
+}
+
+interface BoxProps {}
+
+interface Props extends BoxProps {
+  className?: string;
+}
+
+// Constants
+const BLOCKCHAIN_PRIORITY: Record<Blockchain, number> = {
+  Osmosis: 100,
+  Ethereum: 50,
+  Arbitrum: 30,
+  Zilliqa: 20,
+  Neo: 20,
+} as const;
+
+// Use enum or const to make the significance clear
+const enum PriorityValues {
+  DEFAULT = 0,
+  UNSUPPORTED = -1,
+}
+
+// Utility functions
+const getBlockchainPriority = (blockchain: Blockchain): number => {
+  return BLOCKCHAIN_PRIORITY[blockchain] ?? PriorityValues.UNSUPPORTED;
+};
+
+const formatBalance = (
+  balance: WalletBalance,
+  price: number
+): FormattedWalletBalance => ({
+  ...balance,
+  formatted: balance.amount.toFixed(),
+  usdValue: price * balance.amount,
+});
+
+// Component
+const WalletPage: React.FC<Props> = ({ className, ...rest }) => {
+  const balances = useWalletBalances();
+  const prices = usePrices();
+
+  const formattedBalances = useMemo(() => {
+    return balances
+      .filter((balance) => {
+        const priority = getBlockchainPriority(balance.blockchain);
+        // Only include supported blockchains with positive balances
+        return priority !== PriorityValues.UNSUPPORTED && balance.amount > 0;
+      })
+      .sort((a, b) => {
+        const priorityA = getBlockchainPriority(a.blockchain);
+        const priorityB = getBlockchainPriority(b.blockchain);
+
+        if (priorityA !== priorityB) {
+          return priorityB - priorityA; // Higher priority first
+        }
+        // Secondary sort by amount
+        return b.amount - a.amount;
+      })
+      .map((balance) => formatBalance(balance, prices[balance.currency]));
+  }, [balances, prices]);
+
+  if (!balances.length) {
+    return <div className={className}>No balances found</div>;
+  }
+
+  return (
+    <div className={className} {...rest}>
+      {formattedBalances.map((balance) => (
+        <WalletRow
+          key={`${balance.blockchain}-${balance.currency}`}
+          className={classes.row}
+          amount={balance.amount}
+          usdValue={balance.usdValue}
+          formattedAmount={balance.formatted}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default WalletPage;
+
+const useWalletBalances = (): WalletBalance[] => [];
+const usePrices = () => [];
