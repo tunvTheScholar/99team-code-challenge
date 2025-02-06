@@ -1,7 +1,6 @@
-import "./App.css";
-
+import CurrencySwapPage from "./features/currency-swap/page";
 function App() {
-  return <></>;
+  return <CurrencySwapPage />;
 }
 
 export default App;
